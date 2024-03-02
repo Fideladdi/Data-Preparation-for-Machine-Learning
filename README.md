@@ -14,3 +14,15 @@ The data comes from the Flourish OA dataset and includes three files:
 - `api_journal11-13-17.csv`: Contains journal ISSN, name, publisher, hybrid status, category, and URL.
 - `api_price11-13-17.csv`: Includes subscription price, date of information collection, journal ISSN, influence ID, URL, and license information.
 - `estimated-article-influence-scores-201.csv`: Features journal name, ISSN, citation count, paper count, average citations per paper, projected article influence, and the year of influence projection.
+
+Methods and Tools
+   - R Programming Language: Utilized for all data manipulation, cleaning, and analysis tasks.
+   - RStudio and R Markdown: Employed for scripting, documentation, and reporting findings in an interactive manner.
+   - Libraries: dplyr, tidyr, stringr, and other CRAN packages for data manipulation and preparation.
+
+Installation and Usage
+Ensure you have R and RStudio installed on your system. To replicate the analysis:
+    Clone the repository or download the files to your local machine.
+    Open the RMD file in RStudio.
+    Install required libraries by running install.packages(c("dplyr", "tidyr", "stringr")) if not already installed.
+    Execute the code chunks within the RMD file to perform the data cleaning process.
