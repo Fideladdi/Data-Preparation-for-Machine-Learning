@@ -1,0 +1,329 @@
+---
+title: "Data Preparation for Machine Learning"
+author: "Fidelis Addi"
+date: "2024-02-23"
+output:
+  slidy_presentation: default
+  powerpoint_presentation: default
+  ioslides_presentation: default
+  beamer_presentation: default
+---
+
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+## Agenda
+
+1. The Article influence Dataset
+2. Identify numeric and categorical variables and their data types 
+3. Identify the column to join the data files and the join type
+4. Identify the number/percent of missing data per column
+5. Performing data inputting on the columns
+6. Summary of your final dataset
+
+
+
+## The Flourish OA dataset
+
+- A dataset on journal/publisher information
+
+- **Field description:**
+   
+  **File 1: api_journal11-13-17.csv**  
+  
+- *Issn*: The International Standard Serial Number of the publication
+- *Journal-name*: The name of the scientific journal.
+- *Pub_name*: The name of the publisher.
+- *Is_hybrid*: Electronic and printed versions of journal (1); only electronic version of journal 
+  (0).
+- *category*: The category or scientific field of the journal.
+- *url*: The web page address of the journal.
+
+  **File 2: api_price11-13-17.csv**
+- *id*: Observation id.
+- *price*: The subscription’s price.
+- *date_stamp*: The date in which in the information was collected.
+- *Journal_id*: The International Standard Serial Number of the publication.
+- *Influence_id*: The influence Id.
+- *url*: The web page address of the journal.
+- *license*: Rights for publication, distribution, and use of research. 
+
+  **File 3: estimated-article-influence-scores-201.csv**
+- *Journal_name*: The name of the scientific journal.
+- *issn*: The International Standard Serial Number of the publication.
+- *Citation_count_sum*: The total number of citations of journal.
+- *Paper_count_sum*: The total number of papers published by the journal.
+- *Avg_cites_per_paper*: The average number of citations per paper.
+- *Proj_ai*: The projected article influence. The higher the influence, the better the 
+  scientific credibility of the journal.
+- *Proj_ai_year*: The year of projected article influence
+
+
+## Getting to Know my DataSet
+
+I first read the files(csv) in, stored them with variable names(api_journal,api_price,article_influence_scores) and got some basic information about the files am working with.
+  
+```{r read_flourish_dataset, echo = TRUE}
+
+# Read the Flourish OA dataset
+api_journal <- read.csv("api_journal11-13-17.csv")
+api_price <- read.csv("api_price11-13-17.csv")
+article_influence_scores <- read.csv('estimated-article-influence-scores-2015.csv')
+
+
+```
+
+```{r checking first and last 6 rows, echo = TRUE}
+# Print the first six rows of dataset to have a brief overview of my datasets
+head(api_journal)
+head(api_price)
+head(article_influence_scores)
+
+# Print the last six rows of dataset
+tail(api_journal)
+tail(api_price)
+tail(article_influence_scores)
+
+```
+
+
+
+## Getting to Know my Dataset II
+
+
+```{r dimmisions_of_dataset, echo = TRUE, message = FALSE, warning=FALSE}
+
+# Load dplyr library
+library(dplyr)
+
+# We can get the dimension of the datasets with this instruction to show the columns and rows of each file
+dim(api_journal)
+dim(api_price)
+dim(article_influence_scores)
+
+```
+
+## Q1 Identify numeric and categorical variables and their data types.Identify the number of columns and rows per file
+
+Using the glimpse function to identify the numeric and categorical variables. Categorical variables are always identified as factors in R and somethings characters.There are no categorical(factors) but however we can see characters when using the glimpse function. The glimpse function gives us a breakdown of the number of columns and rows in the datasets, whether these columns are numeric or categorical(char) and the various data types in each column.
+
+```{r flourish_dataset, echo = TRUE, message = FALSE, warning=FALSE}
+
+# We can have a "glimpse" of the data set with this instruction
+glimpse(api_journal)
+glimpse(api_price)
+glimpse(article_influence_scores)
+
+
+```
+
+```{r Identify Numeric and Categorical Variables and Their Data Types, echo = TRUE, message = FALSE, warning=FALSE}
+
+# Use the str() function to identify variables and their data types.
+# This function will list each column in the dataframe, along with its data type, which can help you identify numeric (e.g., int, num) and categorical variables (e.g., factor, chr)
+str(api_journal)
+str(api_price)
+str(article_influence_scores)
+
+
+# Identify the Number of Columns and Rows
+
+# Use the dim() function to get the dimensions of each dataframe, which returns a vector containing the number of rows and columns.
+
+dim(api_journal)
+dim(api_price)
+dim(article_influence_scores)
+
+
+```
+
+
+
+## Getting to Know your Dataset III
+
+We execute the summary "function"
+
+```{r know_diamonds2, echo = TRUE, message = FALSE, warning=FALSE}
+
+summary(api_journal)
+summary(api_price)
+summary(article_influence_scores)
+```
+# Q2 Identify the column to join the data files and the join type. Perform the operations to compile a single dataset. Identify the resulting number of rows and columns
+
+Since all files have 'Issn'(api_price1 uses Journal_id as the Issn) as common columns, that can be used as keys for joining. This ensures that you can accurately match journals across the two datasets based on their ISSN.
+
+A left join is used here to ensure that all entries from the journal information dataset are retained, even if there's no matching record in the price or influence scores datasets. This type of join is useful since i want to keep the dataset intact and add information from other datasets where available. Since i am just data preparation, it wont be wise to begin with dropping rows like what inner join might do
+
+
+```{r inner_joining the first two files(api_journal,article_influence_scores), echo=TRUE}
+
+leftJoin_AA <- left_join(api_journal, api_price, by = c('issn'= 'journal_id'))
+
+head(leftJoin_AA)
+```
+
+
+```{r writing to csv to verify the join output, echo=TRUE}
+
+write.csv(leftJoin_AA, "leftJoin_AA.csv", row.names=FALSE)
+```
+
+An inner join will ensure that i only keep rows for which there is complete data in both datasets.
+left or right join, you might end up with journals that have metadata but no influence scores, or vice versa, which could skew your analysis or result in the inclusion of journals for which you cannot make predictions about influence scores.
+
+```{r inner_joining the last two files(leftJoin_AA,article_influence_scores), echo=TRUE}
+
+flourish_OA_dataset <- inner_join(leftJoin_AA, article_influence_scores, by = "issn")
+
+head(flourish_OA_dataset)
+```
+```{r writing to csv to verify the new join output, echo=TRUE}
+
+write.csv(flourish_OA_dataset, "flourish_OA_dataset.csv", row.names=FALSE)
+```
+
+
+
+```{r Identifing the resulting number of rows and columns, echo=TRUE}
+
+glimpse(flourish_OA_dataset)
+```
+# Q3 Identify the number/percent of missing data per column
+
+```{r Identify the number/percent of missing data per column, echo=TRUE}
+
+colSums(is.na(flourish_OA_dataset))
+```
+After verifying the dataset in a csv format i noticed that it has NULL, empty and missing data. However is.na function does not identify all these values. I therefor choose to convert all these values into NA. This for_loop takes each row in each column and checks if the row =(Null,''or nan) and then converts it to NA.
+
+
+```{r column Names, echo=TRUE}
+
+column_names = colnames(flourish_OA_dataset)
+
+for(column in column_names){
+  flourish_OA_dataset[,column][flourish_OA_dataset[,column] == "NULL" | flourish_OA_dataset[,column] == ""| flourish_OA_dataset[,column] == 'nan' ] = NA
+}
+
+```
+
+```{r colSums, echo=TRUE}
+
+colSums(is.na(flourish_OA_dataset))
+
+```
+
+For easy understanding of the missing values in per column, i decided to convert them to a percentage.
+
+
+```{r Identify the percent of missing data per column, echo=TRUE}
+
+counts = colSums(is.na(flourish_OA_dataset))
+
+# Converting output to percentage
+total_rows <- nrow(flourish_OA_dataset)
+flourish_OA_dataset_percentages <- round(((counts / total_rows) * 100),2)
+flourish_OA_dataset_percentages
+```
+From the above, i noticed that license(94% missing data),url.y(94% missing data), x,date_stamp, influence_id, journal_name.y(duplicated columns of journal_name.x), id do not directly contribute to the quantitative analysis or have a significant number of missing values and therefor, i decided to drop them. The rest of the columns will be maintained and i will create for their correlation and also thier p-values to know the most significants one for my problem moving forward.
+
+```{r dropping columns, echo=TRUE}
+
+flourish_OA_dataset_selected <- flourish_OA_dataset %>% 
+                       select(issn, journal_name.x, pub_name,is_hybrid,citation_count_sum,paper_count_sum,avg_cites_per_paper,proj_ai,proj_ai_year,price, category)
+
+head(flourish_OA_dataset_selected)
+
+```
+
+```{r renaming cols, echo=TRUE}
+# renaming selected cols
+flourish_OA_dataset_selected <- rename(flourish_OA_dataset_selected, c(journal_name = journal_name.x)) # Renaming Journal_id to issn for consistency
+
+```
+
+
+```{r write to csv, echo=TRUE}
+# renaming selected cols to csv to further explore dataset
+write.csv(flourish_OA_dataset_selected, "flourish_OA_dataset_selected.csv", row.names=FALSE)
+```
+
+# Q4 For pub_name and category, i considered imputing with a placeholder value like "Unknown" since it's a categorical variable.For numerical columns like citation_count_sum, paper_count_sum, avg_cites_per_paper, and proj_ai, i considered impute missing values with the median. The choose median as it is not affected by outliers like the mean and if the data is heavily shewed, imputating with the mean might not be a good option
+
+```{r performing data inputting on the columns that require it, echo=TRUE}
+# performing data inputting on the columns that require it
+
+flourish_OA_dataset_selected$pub_name[is.na(flourish_OA_dataset_selected$pub_name)] <- "Unknown"
+
+flourish_OA_dataset_selected$category[is.na(flourish_OA_dataset_selected$category)] <- "Unknown"
+
+# Specifying the columns for which i want to impute missing values with the median
+columns_to_impute <- c("citation_count_sum", "paper_count_sum", "avg_cites_per_paper", "proj_ai", "price")
+
+# Using a for loop to iterate over the columns and impute missing values with the median
+for(column in columns_to_impute) {
+  median_value <- median(flourish_OA_dataset_selected[[column]], na.rm = TRUE)
+  
+  # Replace NA values with the median in the current column
+  flourish_OA_dataset_selected[,column][is.na(flourish_OA_dataset_selected[,column])] <- median_value
+}
+
+
+```
+
+
+```{r imputated dataset, echo=TRUE}
+# imputated datase
+colSums(is.na(flourish_OA_dataset_selected))
+glimpse(flourish_OA_dataset_selected)
+```
+# Q5 Identify any data inconsistencies and fix them
+```{r Data inconsistencies fixing, echo=TRUE}
+
+# Convert numerical columns to numeric
+numerical_columns <- c("citation_count_sum", "paper_count_sum", "avg_cites_per_paper", "proj_ai", "price")
+for(column in numerical_columns) {
+  flourish_OA_dataset_selected[[column]] <- as.numeric(flourish_OA_dataset_selected[[column]])
+}
+
+
+# Convert columns that should be factors (categorical variables) to factor type
+# Journal_name and pub_name might be better as factors if they are used as categorical data
+categorical_columns <- c("journal_name", "pub_name", "is_hybrid")
+flourish_OA_dataset_selected[categorical_columns] <- lapply(flourish_OA_dataset_selected[categorical_columns], factor)
+
+
+
+# Handling invalid data eg. Duplicate Rows
+#Focusing on duplicated ISSNs and removing duplicates based on this identifier might be more appropriate since the ISSN (International Standard Serial Number) serves as a unique identifier for journals.
+
+flourish_OA_dataset_selected <- flourish_OA_dataset_selected %>%
+  distinct(issn, .keep_all = TRUE)
+
+```
+
+# Q6 summary of your final dataset, including the number of rows and columns as well as the variables and datatypes
+
+
+```{r summary of my final dataset, echo=TRUE}
+# summary of my final dataset
+# Display the structure of the dataframe showing variables and their datatypes
+str(flourish_OA_dataset_selected)
+
+# Display the dimensions of the dataframe (number of rows and columns)
+dim(flourish_OA_dataset_selected)
+
+# Provide a summary of the dataframe including basic statistics for numerical columns
+summary(flourish_OA_dataset_selected)
+
+write.csv(flourish_OA_dataset_selected, "flourish_OA_dataset_final.csv", row.names=FALSE)
+```
+
+
+
+
+
